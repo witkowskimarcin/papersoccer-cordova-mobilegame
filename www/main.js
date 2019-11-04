@@ -24,7 +24,11 @@ class Edge{
             this.begin = end;
             this.end = begin;
         }
-      }
+    }
+
+    // constructor(obj) {
+    //     obj && Object.assign(this, obj);
+    // }
 
     pointExists(xx,yy){
         if(this.begin.x==xx&&this.begin.y==yy) return true;
@@ -45,10 +49,35 @@ class Edge{
     }
 }
 
+class Data{
+
+    constructor(player, number, ballx, bally, bonus, edges){
+        this.player=player;
+        this.number=number;
+        this.ballx=ballx;
+        this.bally=bally;
+        this.bonus=bonus;
+        this.edges=edges;
+        this.type ="data";
+    }
+}
+
+class Information{
+
+    constructor(number, msg){
+        this.number=number;
+        this.msg=msg;
+        this.type="info";
+    }
+}
+
 let edges = [];
 let multiply = 30.0;
+let number = -1;
 
 function initEdges(){
+
+    edges = [];
 
     // top
     edges.push(new Edge(new Vertex2f(3, 1), new Vertex2f(3, 2)));
@@ -126,6 +155,8 @@ var joyY = 450;
 var joyRadius = 50;
 
 let player = 0;
+let ready = false;
+let end = false;
 
 function animation(){
     draw();
@@ -133,7 +164,7 @@ function animation(){
 }
 
 function drawField(ctx){
-    ctx.fillStyle = 'green';
+    ctx.fillStyle = 'rgba(10, 220, 10, 1.0)';
     ctx.beginPath();
     ctx.rect(0,0,canvas.width,canvas.height);
     ctx.fill();
@@ -147,6 +178,22 @@ function drawBall(ctx){
     ctx.fill();
 }
 
+function drawMessage(ctx, mess){
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.beginPath();
+    ctx.rect(0,0,canvas.width,canvas.height);
+    ctx.fill();
+
+    ctx.fillStyle = "black";
+    ctx.font = "30px Times Roman";
+    ctx.fillText(mess, 0, canvas.height/2.0);
+
+    ctx.strokeStyle = "white";
+    ctx.font = "30px Times Roman";
+    ctx.lineWidth = 3;
+    ctx.strokeText(mess, 0, canvas.height/2.0);
+}
+
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -158,6 +205,18 @@ function draw(){
     drawBall(ctx);
     ctx.rotate((-90.0*Math.PI)/180.0);
     ctx.translate(-((canvas.width/2)+150), -((canvas.height/2)-270));
+
+    if(end==true){
+        if(won==true){
+            drawMessage(ctx, "You won, tap to play next game");
+        } else {
+            drawMessage(ctx, "You lost, tap to play next game");
+        }
+    } else if(close==true){
+        drawMessage(ctx, "Second player disconnected, tap to reconnect");
+    } else if(ready==false){
+        drawMessage(ctx, "Wait for second player");
+    }
 
     console.log("Gracz: "+player);
 }
@@ -450,24 +509,32 @@ function makeMove(key)
             console.log("Dodatkowy ruch dla "+player);
         }
 
+        data = new Data(yourplayer,number,ball.x,ball.y,dodatkowy_ruch,edges);
+        connection.send(JSON.stringify(data)); 
         whoWon();
-        draw();
+        // draw();
     }
 }
 
 function whoWon() {
     if (ball.x == 2 && (ball.y == 4 || ball.y == 5 || ball.y == 6)) {
-        // if (player == 0) {
-            console.log("Wygral gracz 1");
-        // } else {
-            
-        // }
+        console.log("Wygral gracz 1");
+        end = true;
+        ready = false;
+        if(yourplayer==1){
+            won = true;
+        } else {
+            won = false;
+        }
     } else if (ball.x == 16 && (ball.y == 4 || ball.y == 5 || ball.y == 6)) {
-        // if (player == 1) {
-            console.log("Wygral gracz 2");
-        // } else {
-
-        // }
+        console.log("Wygral gracz 2");
+        end = true;
+        ready = false;
+        if(yourplayer==2){
+            won = false;
+        } else {
+            won = true;
+        }
     }
 }
 function toogle(){
@@ -479,23 +546,107 @@ function toogle(){
 // MAIN
 //--------------------------------------------//
 
-initEdges();
+var connection = null;
+function connectToServer(){
 
-var canvas = document.getElementById('mycanvas');
-var ctx = canvas.getContext('2d');
+    // CONNECT TO SERVER
+    connection = new WebSocket('ws://localhost:9030');
 
-ball = {
-    // x:canvas.width/2.0,
-    // y:canvas.height/2.0,
-    x:9,
-    y:5,
-    r:5,
-    vx:1,
-    vy:1,
+    // Open connection
+    connection.onopen = function () {
+        console.log('Connected');
+
+        // Log messages from the server
+        connection.onmessage = function (e) {
+            console.log("ONMESSAGE");
+            console.log('message from server', e.data);
+            d = JSON.parse(e.data);
+            console.log('message from server', d.type);
+
+                if(d.type=="player"){
+                    yourplayer = d.player;
+                    player = 1;
+                    close=false;
+                } else if(d.type=="info"){
+                    if(d.msg=="ready"){
+                        ready=true;
+                        number=d.number;
+                        console.log("NUMBER "+number);
+                    } else if(d.msg=="close"){
+                        ready=false;
+                        close=true;
+                        connection.close(1000,number+"");
+                        connection = null;
+                    }
+                } else if(d.type=="data"){
+                    player = d.player;
+                    console.log("Current player: "+player);
+                    edges = [];
+
+                    for(i=0;i<d.edges.length;i++){
+                        edges.push(new Edge(new Vertex2f(d.edges[i].begin.x, d.edges[i].begin.y), new Vertex2f(d.edges[i].end.x, d.edges[i].end.y)));
+                    }
+                    ball.x = d.ballx;
+                    ball.y = d.bally;
+                    whoWon();
+                }
+                draw();
+        };
+    };
+
+    // Log errors
+    connection.onerror = function (error) {
+        console.error('WebSocket Error ' + error);
+    };
+
+    connection.onclose = function (code, msg) {
+        console.log("Close: "+code+" "+msg);
+        connection.send(new Information(number,"close")); 
+    };
 }
 
+connectToServer();
+
+// CANVAS
+
+var canvas = null;
+var ctx = null;
+
+function drawCanvas(){
+    canvas = document.getElementById('mycanvas');
+    ctx = canvas.getContext('2d');
+    ctx.canvas.width  = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
+    // multiply = canvas.height/16.0;
+    
+    ball = {
+        x:9,
+        y:5,
+        r:5,
+        vx:1,
+        vy:1,
+    }
+
+    initEdges();
+}
+
+drawCanvas();
+
 canvas.addEventListener("click", function(evt){
-    getMousePos(canvas, evt);
+    if(yourplayer==player&&ready==true){
+        getMousePos(canvas, evt);
+    } else if (close==true){
+        connectToServer();
+        close=false;
+        drawCanvas();
+        draw();
+    } else if(end==true){
+        connectToServer();
+        close=false;
+        end=false;
+        drawCanvas();
+        draw();
+    }
 });
 
 animation();
