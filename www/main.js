@@ -141,6 +141,17 @@ function initEdges(){
 }
 
 function drawEdges(ctx){
+
+    ctx.fillStyle = color1;
+    ctx.beginPath();
+    ctx.rect(2.0*multiply,4.0*multiply,1.0*multiply,2.0*multiply);
+    ctx.fill();
+
+    ctx.fillStyle = color2;
+    ctx.beginPath();
+    ctx.rect(15.0*multiply,4.0*multiply,1.0*multiply,2.0*multiply);
+    ctx.fill();
+    
     for(i=0;i<edges.length;i++){
         ctx.fillStyle="#ffffff"; 
         ctx.beginPath();
@@ -168,6 +179,17 @@ function drawField(ctx){
     ctx.beginPath();
     ctx.rect(0,0,canvas.width,canvas.height);
     ctx.fill();
+
+    color1 = null;
+    color2 = null;
+
+    if(yourplayer==1){
+        color1='red';
+        color2='blue';
+    } else {
+        color1='blue';
+        color2='red';
+    }
 }
 
 function drawBall(ctx){
@@ -198,6 +220,9 @@ function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     drawField(ctx);
+
+    ctx.fillStyle = "black";
+    ctx.font = "30px Times Roman";
     
     ctx.translate((canvas.width/2)+150, (canvas.height/2)-270);
     ctx.rotate((90.0*Math.PI)/180.0);
@@ -205,6 +230,13 @@ function draw(){
     drawBall(ctx);
     ctx.rotate((-90.0*Math.PI)/180.0);
     ctx.translate(-((canvas.width/2)+150), -((canvas.height/2)-270));
+
+    if(player==yourplayer){
+        ms = "Your move";
+    } else {
+        ms = "Wait for move";
+    }
+    ctx.fillText(ms, 100.0, 300.0);
 
     if(end==true){
         if(won==true){
