@@ -1,3 +1,21 @@
+let IP = "192.168.43.3";
+//let IP = "localhost";
+//let IP = "10.16.4.183";
+
+// COLORS
+let FIELD_COLOR = "rgba(10, 220, 10, 1.0)";
+let MYGATE_COLOR = "#0000FF";
+let ENEMYGATE_COLOR = "#FF0000";
+let EDGE_COLOR = "#FFFFFF";
+let BALL_COLOR = "#FFFFFF";
+let BG_COLOR = "#374140";
+let TEXT_COLOR = "#FFFFFF";
+let MESSAGE_COLOR = "rgba(0, 0, 0, 0.5)";
+
+let edges = [];
+let multiply = 30.0;
+let number = -1;
+
 class Vertex2f {
     constructor(x,y) {
       this.x = x;
@@ -70,10 +88,6 @@ class Information{
         this.type="info";
     }
 }
-
-let edges = [];
-let multiply = 30.0;
-let number = -1;
 
 function initEdges(){
 
@@ -151,9 +165,9 @@ function drawEdges(ctx){
     ctx.beginPath();
     ctx.rect(15.0*multiply,4.0*multiply,1.0*multiply,2.0*multiply);
     ctx.fill();
-    
+
     for(i=0;i<edges.length;i++){
-        ctx.fillStyle="#ffffff"; 
+        ctx.fillStyle=EDGE_COLOR; 
         ctx.beginPath();
         ctx.moveTo(multiply*edges[i].begin.x,multiply*edges[i].begin.y);
         ctx.lineTo(multiply*edges[i].end.x,multiply*edges[i].end.y);
@@ -175,7 +189,8 @@ function animation(){
 }
 
 function drawField(ctx){
-    ctx.fillStyle = 'rgba(10, 220, 10, 1.0)';
+    // ctx.fillStyle = 'rgba(10, 220, 10, 1.0)';
+    ctx.fillStyle = FIELD_COLOR;
     ctx.beginPath();
     ctx.rect(0,0,canvas.width,canvas.height);
     ctx.fill();
@@ -184,16 +199,92 @@ function drawField(ctx){
     color2 = null;
 
     if(yourplayer==1){
-        color1='red';
-        color2='blue';
+        color1=ENEMYGATE_COLOR;
+        color2=MYGATE_COLOR;
     } else {
-        color1='blue';
-        color2='red';
+        color1=MYGATE_COLOR;
+        color2=ENEMYGATE_COLOR;
     }
+
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(0.0,0.33*canvas.height);
+//    ctx.lineTo(canvas.width,0.66*canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(0.0,0.66*canvas.height);
+//    ctx.lineTo(canvas.width,0.33*canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(0.33*canvas.width,0.0);
+//    ctx.lineTo(0.66*canvas.width,canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(0.33*canvas.width,canvas.height);
+//    ctx.lineTo(0.66*canvas.width,0.0);
+//    ctx.stroke();
+
+//--------------------------
+
+    // ctx.fillStyle="white";
+    // ctx.beginPath();
+    // ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+    // ctx.lineTo(0.0,0.33*canvas.height);
+    // ctx.stroke();
+
+    // ctx.fillStyle="white";
+    // ctx.beginPath();
+    // ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+    // ctx.lineTo(0.0,0.66*canvas.height);
+    // ctx.stroke();
+
+    // ctx.fillStyle="white";
+    // ctx.beginPath();
+    // ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+    // ctx.lineTo(0.33*canvas.width,0.0);
+    // ctx.stroke();
+
+    // ctx.fillStyle="white";
+    // ctx.beginPath();
+    // ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+    // ctx.lineTo(0.66*canvas.width,0.0);
+    // ctx.stroke();
+
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+//    ctx.lineTo(0.33*canvas.width,0.33*canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+//    ctx.lineTo(0.66*canvas.width,0.33*canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+//    ctx.lineTo(0.33*canvas.width,0.66*canvas.height);
+//    ctx.stroke();
+//
+//    ctx.fillStyle="white";
+//    ctx.beginPath();
+//    ctx.moveTo(canvas.width/2.0,canvas.height/2.0);
+//    ctx.lineTo(0.66*canvas.width,0.66*canvas.height);
+//    ctx.stroke();
+
+
 }
 
 function drawBall(ctx){
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = BALL_COLOR;
     ctx.beginPath();
     console.log("TUTAJ: "+ball.x+" "+ball.y);
     ctx.ellipse(ball.x*multiply, ball.y*multiply, 2*ball.r, 2*ball.r, Math.PI * .25, 0, 2*Math.PI);
@@ -201,7 +292,7 @@ function drawBall(ctx){
 }
 
 function drawMessage(ctx, mess){
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillStyle = MESSAGE_COLOR;
     ctx.beginPath();
     ctx.rect(0,0,canvas.width,canvas.height);
     ctx.fill();
@@ -220,9 +311,6 @@ function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
     drawField(ctx);
-
-    ctx.fillStyle = "black";
-    ctx.font = "30px Times Roman";
     
     ctx.translate((canvas.width/2)+150, (canvas.height/2)-270);
     ctx.rotate((90.0*Math.PI)/180.0);
@@ -231,12 +319,15 @@ function draw(){
     ctx.rotate((-90.0*Math.PI)/180.0);
     ctx.translate(-((canvas.width/2)+150), -((canvas.height/2)-270));
 
+    ctx.fillStyle = TEXT_COLOR;
+    ctx.font = "30px Times Roman";
+
     if(player==yourplayer){
         ms = "Your move";
     } else {
         ms = "Wait for move";
     }
-    ctx.fillText(ms, 100.0, 300.0);
+    ctx.fillText(ms, canvas.width/2-100, canvas.height/2-250);
 
     if(end==true){
         if(won==true){
@@ -263,56 +354,141 @@ function getMousePos(canvas, evt) {
     y *= -1.0;
     a = y/x;
 
+    // y = ax+b
+
+    function fun_cursor(X) { return (y/x)*X;}
+
+    function fun2(X) { return (canvas.height/(0.33*canvas.width))*X;}
+    function fun22(X) { return (0.0/(0.66*canvas.width))*X;}
+
+    function fun1(X) { return (canvas.height/(0.66*canvas.width))*X;}
+    function fun11(X) { return (0.0/(0.33*canvas.width))*X;}
+
+    function fun3(X) { return ((0.33*canvas.height)/(canvas.width))*X;}
+    function fun33(X) { return ((0.66*canvas.height)/(0.0))*X;}
+
+    function fun4(X) { return ((0.66*canvas.height)/(canvas.width))*X;}
+    function fun44(X) { return ((0.33*canvas.height)/(0.0))*X;}
+    
+
     console.log("X:"+x+" Y:"+y+" a:"+a);
 
     if(x>=0 && y>=0){
+        console.log("1 QUATER "+fun_cursor(x));
+        console.log("fun4: "+fun4(x));
+        console.log("fun2: "+fun2(x));
 
-        if(a>-0.5578 && a<=0.5578){
-            console.log("PRAWO");
+        if(fun_cursor(x)<fun4(x)){
+            console.log("RIGHT");
             makeMove('a');
-        } else if (a>0.5578 && a<=22.5882){
-            console.log("GORAPRAWO");
+        } else if (fun_cursor(x)>=fun4(x)&&fun_cursor(x)<=fun2(x)){
+            console.log("UPRIGHT");
             makeMove('q');
         } else {
-            console.log("GORA");
+            console.log("UPPER");
             makeMove('w');
         }
-
-    } else if(x<0 && y>=0) {
-        if(a<0.5578 && a>=-0.5578){
-            console.log("LEWO");
+    }
+    else if(x<0 && y>=0) {
+        console.log("2 QUATER "+fun_cursor(x));
+        console.log("fun3: "+fun3(x));
+        console.log("fun1: "+fun1(x));
+        // x*=-1.0;
+        if(fun_cursor(x)<(fun3(x)*-1.0)){
+            console.log("LEFT");
             makeMove('d');
-        } else if (a<-0.5578 && a>-22.5882){
-            console.log("GORALEWO");
+        } else if (fun_cursor(x)>=(fun3(x)*-1.0)&&fun_cursor(x)<=(fun1(x)*-1.0)){
+            console.log("UPLEFT");
             makeMove('e');
-        }else {
-            console.log("GORA");
+        } else {
+            console.log("UPPER");
             makeMove('w');
         }
-    } else if(x>=0 && y<0) {
-        if(a>-0.5578 && a<=0.5578){
-            console.log("PRAWO");
+    }
+    else if(x>=0 && y<0) {
+        console.log("4 QUATER "+fun_cursor(x));
+        console.log("fun4: "+fun4(x));
+        console.log("fun2: "+fun2(x));
+        if(fun_cursor(x)>(fun4(x)*-1.0)){
+            console.log("RIGHT");
             makeMove('a');
-        } else if (a<-0.5578 && a>-22.5882){
-            console.log("DOLPRAWO"); 
+        } else if (fun_cursor(x)<=(fun4(x)*-1.0)&&fun_cursor(x)>=(fun2(x)*-1.0)){
+            console.log("DOWNRIGHT");
             makeMove('z');
-        }else {
-            console.log("DOL");
-            makeMove('x');            
+        } else {
+            console.log("DOWN");
+            makeMove('x');
         }
-
-    } else if(x<0 && y<0) {
-        if(a>-0.5578 && a<=0.5578){
-            console.log("LEWO");
+    } 
+    else if(x<0 && y<0) {
+        console.log("3 QUATER "+fun_cursor(x));
+        console.log("fun4: "+fun4(x));
+        console.log("fun2: "+fun2(x));
+        if(fun_cursor(x)>(fun4(x))){
+            console.log("LEFT");
             makeMove('d');
-        } else if (a>0.5578 && a<=22.5882){
-            console.log("DOLLEWO");
+        } else if (fun_cursor(x)<=(fun4(x))&&fun_cursor(x)>=(fun2(x))){
+            console.log("DOWNLEFT");
             makeMove('c');
-        }else {
-            console.log("DOL");
+        } else {
+            console.log("DOWN");
             makeMove('x');
         }
     }
+
+
+    //     if(a>-0.5578 && a<=0.5578){
+    //         console.log("PRAWO");
+    //         makeMove('a');
+    //     } else if (a>0.5578 && a<=22.5882){
+    //         console.log("GORAPRAWO");
+    //         makeMove('q');
+    //     } else {
+    //         console.log("GORA");
+    //         makeMove('w');
+    //     }
+
+    // } else if(x<0 && y>=0) {
+    //         console.log("2 QUATER");
+
+    //     if(a<0.5578 && a>=-0.5578){
+    //         console.log("LEWO");
+    //         makeMove('d');
+    //     } else if (a<-0.5578 && a>-22.5882){
+    //         console.log("GORALEWO");
+    //         makeMove('e');
+    //     }else {
+    //         console.log("GORA");
+    //         makeMove('w');
+    //     }
+    // } else if(x>=0 && y<0) {
+    //         console.log("3 QUATER");
+
+    //     if(a>-0.5578 && a<=0.5578){
+    //         console.log("PRAWO");
+    //         makeMove('a');
+    //     } else if (a<-0.5578 && a>-22.5882){
+    //         console.log("DOLPRAWO"); 
+    //         makeMove('z');
+    //     }else {
+    //         console.log("DOL");
+    //         makeMove('x');            
+    //     }
+
+    // } else if(x<0 && y<0) {
+    //         console.log("4 QUATER");
+
+    //     if(a>-0.5578 && a<=0.5578){
+    //         console.log("LEWO");
+    //         makeMove('d');
+    //     } else if (a>0.5578 && a<=22.5882){
+    //         console.log("DOLLEWO");
+    //         makeMove('c');
+    //     }else {
+    //         console.log("DOL");
+    //         makeMove('x');
+    //     }
+    // }
 }
 
 function makeMove(key)
@@ -578,11 +754,18 @@ function toogle(){
 // MAIN
 //--------------------------------------------//
 
+var canvas = null;
+var ctx = null;
 var connection = null;
+
+function main(){
+
 function connectToServer(){
 
+    // WebSocket = require('ws');
+
     // CONNECT TO SERVER
-    connection = new WebSocket('ws://localhost:9030');
+    connection = new WebSocket("ws://"+IP+":9030");
 
     // Open connection
     connection.onopen = function () {
@@ -641,14 +824,13 @@ connectToServer();
 
 // CANVAS
 
-var canvas = null;
-var ctx = null;
-
 function drawCanvas(){
     canvas = document.getElementById('mycanvas');
     ctx = canvas.getContext('2d');
     ctx.canvas.width  = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
+    ctx.canvas.height = window.innerHeight;    
+//    ctx.canvas.width  = 400;
+//    ctx.canvas.height = 600;
     // multiply = canvas.height/16.0;
     
     ball = {
@@ -683,6 +865,18 @@ canvas.addEventListener("click", function(evt){
 
 animation();
 
+}
+
 //--------------------------------------------//
 // !MAIN
 //--------------------------------------------//
+
+window.addEventListener("load", onDeviceReady);           // needed for websites
+document.addEventListener("deviceready", onDeviceReady);  // needed for Cordova mobile apps
+
+function onDeviceReady() {
+    // Now safe to use device APIs
+    main();
+}
+
+// main();
