@@ -9,7 +9,6 @@ bin/*
 !/plugins/android.json
 !/plugins/fetch.json
 plugins/*
-platforms/*
 
 ### Cordova ###
 # gitignore template for the Cordova framework
@@ -17,8 +16,6 @@ platforms/*
 #
 # Recommended template: Node.gitignore
 
-# App platform binaries and built files
-/platforms
 
 # Optional to ignore plugin Git clones
 #/plugins
