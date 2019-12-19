@@ -1,6 +1,10 @@
-let IP = "192.168.43.3";
-//let IP = "localhost";
+// let IP = "192.168.43.3";
+let IP = "pappersoccer.herokuapp.com";
+// let PORT = "3000";
+// let IP = "localhost";
 //let IP = "10.16.4.183";
+// let ADDRESS = "ws://"+IP+":"+PORT+"/";
+let ADDRESS = "wss://"+IP;
 
 // COLORS
 let FIELD_COLOR = "rgba(10, 220, 10, 1.0)";
@@ -64,6 +68,95 @@ class Edge{
             }
         }
         return false;
+    }
+}
+
+class Ball{
+    constructor(x,y,r){
+        this.x=x;
+        this.y=y;
+        this.r=r;
+        this.width=2.0*this.r;
+        this.height=2.0*this.r;
+        this.intervalTime = 100;
+        this.numberOfSteps = 10;
+        this.stepSize = 0.2;
+
+        if (this.stepSize > 0) // image is pulsating between original size to a larger size
+        {
+            this.incrementing = true;
+        }
+        else // image is pulsating between original size to a larger size
+        {
+            this.incrementing = false;
+        }
+
+        this.centreX = this.x + this.r;
+        this.centreY = this.y + this.r;
+        this.currentStep = 0;
+    }
+
+    updateState()
+    {
+        // console.log("updateState()");
+        if (this.stepSize > 0) // image pulses into a bigger image
+        {
+            if (this.incrementing) // incrementing to increase size of original image
+            {
+                this.currentStep++;
+                if (this.currentStep === this.numberOfSteps)
+                {
+                    this.incrementing = false;
+                }
+            }
+            else // drecrementing to return to original image size
+            {
+                this.currentStep--;
+                if (this.currentStep === 0)
+                {
+                    this.incrementing = true;
+                }
+            }
+        }
+        else // image pulses into a smaller image
+        {
+            if (!this.incrementing) // drecrementing to decrease size of original image
+            {
+                this.currentStep++;
+                if (this.currentStep === this.numberOfSteps)
+                {
+                    this.incrementing = true;
+                }
+            }
+            else // drecrementing to return to original image size
+            {
+                this.currentStep--;
+                if (this.currentStep === 0)
+                {
+                    this.incrementing = false;
+                }
+            }
+        }
+    }
+
+    render(ctx){
+        ctx.fillStyle = BALL_COLOR;
+        ctx.save();
+        ctx.beginPath();
+        // console.log("TUTAJ: "+ball.x+" "+ball.y);
+        // ctx.ellipse(ball.x*multiply, ball.y*multiply, 2*ball.r, 2*ball.r, Math.PI * .25, 0, 2*Math.PI);
+        var newWidth = this.width + (this.currentStep * this.stepSize);
+        var newHeight = this.height + (this.currentStep * this.stepSize);
+        // var newR = newWidth/2.0;
+        var newR = this.r  + (this.currentStep * this.stepSize);
+        var newX = ((this.x)*multiply) - (this.currentStep * this.stepSize) / 2;
+        var newY = ((this.y)*multiply) - (this.currentStep * this.stepSize) / 2;
+        // ctx.ellipse(newX, newY, newWidth, newHeight, Math.PI * .25, 0, 2*Math.PI);
+        // ctx.ellipse(newX+(newR/2), newY+(newR/2), 2*newR, 2*newR, Math.PI * .25, 0, 2*Math.PI);
+        ctx.ellipse(newX+(this.r/2), newY+(this.r/2), 2*newR, 2*newR, Math.PI * .25, 0, 2*Math.PI);
+        // ctx.ellipse(newX, newY, 2*newR, 2*newR, Math.PI * .25, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.restore();
     }
 }
 
@@ -180,13 +273,10 @@ var joyY = 450;
 var joyRadius = 50;
 
 let player = 0;
+let yourplayer = -1;
 let ready = false;
 let end = false;
-
-function animation(){
-    draw();
-    // setTimeout(animation,10);
-}
+let conError = false;
 
 function drawField(ctx){
     // ctx.fillStyle = 'rgba(10, 220, 10, 1.0)';
@@ -283,14 +373,6 @@ function drawField(ctx){
 
 }
 
-function drawBall(ctx){
-    ctx.fillStyle = BALL_COLOR;
-    ctx.beginPath();
-    console.log("TUTAJ: "+ball.x+" "+ball.y);
-    ctx.ellipse(ball.x*multiply, ball.y*multiply, 2*ball.r, 2*ball.r, Math.PI * .25, 0, 2*Math.PI);
-    ctx.fill();
-}
-
 function drawMessage(ctx, mess){
     ctx.fillStyle = MESSAGE_COLOR;
     ctx.beginPath();
@@ -309,25 +391,9 @@ function drawMessage(ctx, mess){
 
 function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
     drawField(ctx);
-    
-    ctx.translate((canvas.width/2)+150, (canvas.height/2)-270);
-    ctx.rotate((90.0*Math.PI)/180.0);
-    drawEdges(ctx);
-    drawBall(ctx);
-    ctx.rotate((-90.0*Math.PI)/180.0);
-    ctx.translate(-((canvas.width/2)+150), -((canvas.height/2)-270));
-
     ctx.fillStyle = TEXT_COLOR;
-    ctx.font = "30px Times Roman";
-
-    if(player==yourplayer){
-        ms = "Your move";
-    } else {
-        ms = "Wait for move";
-    }
-    ctx.fillText(ms, canvas.width/2-100, canvas.height/2-250);
+    ctx.font = "20px Times Roman";
 
     if(end==true){
         if(won==true){
@@ -336,12 +402,29 @@ function draw(){
             drawMessage(ctx, "You lost, tap to play next game");
         }
     } else if(close==true){
-        drawMessage(ctx, "Second player disconnected, tap to reconnect");
+        drawMessage(ctx, "Second player disconnected, tap to find another");
     } else if(ready==false){
         drawMessage(ctx, "Wait for second player");
+    } else if(conError==true || !connection){
+        drawMessage(ctx, "Connection error, tap to reconnect");
+    } else {
+
+        ctx.translate((canvas.width/2)+150, (canvas.height/2)-270);
+        ctx.rotate((90.0*Math.PI)/180.0);
+        drawEdges(ctx);
+        ball.render(ctx);
+        ctx.rotate((-90.0*Math.PI)/180.0);
+        ctx.translate(-((canvas.width/2)+150), -((canvas.height/2)-270));
+    
+        if(player==yourplayer){
+            ms = "Your move";
+        } else {
+            ms = "Wait for move";
+        }
+        ctx.fillText(ms, canvas.width/2-100, canvas.height/2-250);
     }
 
-    console.log("Gracz: "+player);
+    // console.log("Gracz: "+player);
 }
 
 function getMousePos(canvas, evt) {
@@ -371,124 +454,70 @@ function getMousePos(canvas, evt) {
     function fun44(X) { return ((0.33*canvas.height)/(0.0))*X;}
     
 
-    console.log("X:"+x+" Y:"+y+" a:"+a);
+    // console.log("X:"+x+" Y:"+y+" a:"+a);
 
     if(x>=0 && y>=0){
-        console.log("1 QUATER "+fun_cursor(x));
-        console.log("fun4: "+fun4(x));
-        console.log("fun2: "+fun2(x));
+        // console.log("1 QUATER "+fun_cursor(x));
+        // console.log("fun4: "+fun4(x));
+        // console.log("fun2: "+fun2(x));
 
         if(fun_cursor(x)<fun4(x)){
-            console.log("RIGHT");
+            // console.log("RIGHT");
             makeMove('a');
         } else if (fun_cursor(x)>=fun4(x)&&fun_cursor(x)<=fun2(x)){
-            console.log("UPRIGHT");
+            // console.log("UPRIGHT");
             makeMove('q');
         } else {
-            console.log("UPPER");
+            // console.log("UPPER");
             makeMove('w');
         }
     }
     else if(x<0 && y>=0) {
-        console.log("2 QUATER "+fun_cursor(x));
-        console.log("fun3: "+fun3(x));
-        console.log("fun1: "+fun1(x));
+        // console.log("2 QUATER "+fun_cursor(x));
+        // console.log("fun3: "+fun3(x));
+        // console.log("fun1: "+fun1(x));
         // x*=-1.0;
         if(fun_cursor(x)<(fun3(x)*-1.0)){
-            console.log("LEFT");
+            // console.log("LEFT");
             makeMove('d');
         } else if (fun_cursor(x)>=(fun3(x)*-1.0)&&fun_cursor(x)<=(fun1(x)*-1.0)){
-            console.log("UPLEFT");
+            // console.log("UPLEFT");
             makeMove('e');
         } else {
-            console.log("UPPER");
+            // console.log("UPPER");
             makeMove('w');
         }
     }
     else if(x>=0 && y<0) {
-        console.log("4 QUATER "+fun_cursor(x));
-        console.log("fun4: "+fun4(x));
-        console.log("fun2: "+fun2(x));
+        // console.log("4 QUATER "+fun_cursor(x));
+        // console.log("fun4: "+fun4(x));
+        // console.log("fun2: "+fun2(x));
         if(fun_cursor(x)>(fun4(x)*-1.0)){
-            console.log("RIGHT");
+            // console.log("RIGHT");
             makeMove('a');
         } else if (fun_cursor(x)<=(fun4(x)*-1.0)&&fun_cursor(x)>=(fun2(x)*-1.0)){
-            console.log("DOWNRIGHT");
+            // console.log("DOWNRIGHT");
             makeMove('z');
         } else {
-            console.log("DOWN");
+            // console.log("DOWN");
             makeMove('x');
         }
     } 
     else if(x<0 && y<0) {
-        console.log("3 QUATER "+fun_cursor(x));
-        console.log("fun4: "+fun4(x));
-        console.log("fun2: "+fun2(x));
+        // console.log("3 QUATER "+fun_cursor(x));
+        // console.log("fun4: "+fun4(x));
+        // console.log("fun2: "+fun2(x));
         if(fun_cursor(x)>(fun4(x))){
-            console.log("LEFT");
+            // console.log("LEFT");
             makeMove('d');
         } else if (fun_cursor(x)<=(fun4(x))&&fun_cursor(x)>=(fun2(x))){
-            console.log("DOWNLEFT");
+            // console.log("DOWNLEFT");
             makeMove('c');
         } else {
-            console.log("DOWN");
+            // console.log("DOWN");
             makeMove('x');
         }
     }
-
-
-    //     if(a>-0.5578 && a<=0.5578){
-    //         console.log("PRAWO");
-    //         makeMove('a');
-    //     } else if (a>0.5578 && a<=22.5882){
-    //         console.log("GORAPRAWO");
-    //         makeMove('q');
-    //     } else {
-    //         console.log("GORA");
-    //         makeMove('w');
-    //     }
-
-    // } else if(x<0 && y>=0) {
-    //         console.log("2 QUATER");
-
-    //     if(a<0.5578 && a>=-0.5578){
-    //         console.log("LEWO");
-    //         makeMove('d');
-    //     } else if (a<-0.5578 && a>-22.5882){
-    //         console.log("GORALEWO");
-    //         makeMove('e');
-    //     }else {
-    //         console.log("GORA");
-    //         makeMove('w');
-    //     }
-    // } else if(x>=0 && y<0) {
-    //         console.log("3 QUATER");
-
-    //     if(a>-0.5578 && a<=0.5578){
-    //         console.log("PRAWO");
-    //         makeMove('a');
-    //     } else if (a<-0.5578 && a>-22.5882){
-    //         console.log("DOLPRAWO"); 
-    //         makeMove('z');
-    //     }else {
-    //         console.log("DOL");
-    //         makeMove('x');            
-    //     }
-
-    // } else if(x<0 && y<0) {
-    //         console.log("4 QUATER");
-
-    //     if(a>-0.5578 && a<=0.5578){
-    //         console.log("LEWO");
-    //         makeMove('d');
-    //     } else if (a>0.5578 && a<=22.5882){
-    //         console.log("DOLLEWO");
-    //         makeMove('c');
-    //     }else {
-    //         console.log("DOL");
-    //         makeMove('x');
-    //     }
-    // }
 }
 
 function makeMove(key)
@@ -698,8 +727,6 @@ function makeMove(key)
     }
     if (next)
     {
-        // console.log("NEXT");
-
         edges.push(new Edge(new Vertex2f(ball.x, ball.y), new Vertex2f(next_x, next_y)));
         ball.x = next_x;
         ball.y = next_y;
@@ -750,6 +777,12 @@ function toogle(){
     else if(player==1) player=0;
 }
 
+const time = setInterval(function() {
+    if(player==yourplayer)
+        ball.updateState();
+    draw();
+}, 100);
+
 //--------------------------------------------//
 // MAIN
 //--------------------------------------------//
@@ -762,10 +795,8 @@ function main(){
 
 function connectToServer(){
 
-    // WebSocket = require('ws');
-
     // CONNECT TO SERVER
-    connection = new WebSocket("ws://"+IP+":9030");
+    connection = new WebSocket(ADDRESS);
 
     // Open connection
     connection.onopen = function () {
@@ -773,10 +804,10 @@ function connectToServer(){
 
         // Log messages from the server
         connection.onmessage = function (e) {
-            console.log("ONMESSAGE");
-            console.log('message from server', e.data);
+            // console.log("ONMESSAGE");
+            // console.log('message from server', e.data);
             d = JSON.parse(e.data);
-            console.log('message from server', d.type);
+            // console.log('message from server', d.type);
 
                 if(d.type=="player"){
                     yourplayer = d.player;
@@ -786,7 +817,7 @@ function connectToServer(){
                     if(d.msg=="ready"){
                         ready=true;
                         number=d.number;
-                        console.log("NUMBER "+number);
+                        // console.log("NUMBER "+number);
                     } else if(d.msg=="close"){
                         ready=false;
                         close=true;
@@ -795,7 +826,7 @@ function connectToServer(){
                     }
                 } else if(d.type=="data"){
                     player = d.player;
-                    console.log("Current player: "+player);
+                    // console.log("Current player: "+player);
                     edges = [];
 
                     for(i=0;i<d.edges.length;i++){
@@ -805,18 +836,26 @@ function connectToServer(){
                     ball.y = d.bally;
                     whoWon();
                 }
-                draw();
+                // draw();
         };
     };
 
     // Log errors
     connection.onerror = function (error) {
         console.error('WebSocket Error ' + error);
+        conError=true;
+        ready=false;
+        connection=null;
+        // close=true;
     };
 
     connection.onclose = function (code, msg) {
         console.log("Close: "+code+" "+msg);
-        connection.send(new Information(number,"close")); 
+        ready=false;
+        close=true;
+        if(connection)
+            connection.send(new Information(number,"close")); 
+        connection = null;
     };
 }
 
@@ -829,17 +868,11 @@ function drawCanvas(){
     ctx = canvas.getContext('2d');
     ctx.canvas.width  = window.innerWidth;
     ctx.canvas.height = window.innerHeight;    
-//    ctx.canvas.width  = 400;
-//    ctx.canvas.height = 600;
+    //    ctx.canvas.width  = 400;
+    //    ctx.canvas.height = 600;
     // multiply = canvas.height/16.0;
-    
-    ball = {
-        x:9,
-        y:5,
-        r:5,
-        vx:1,
-        vy:1,
-    }
+
+    ball = new Ball(9,5,5);
 
     initEdges();
 }
@@ -852,18 +885,29 @@ canvas.addEventListener("click", function(evt){
     } else if (close==true){
         connectToServer();
         close=false;
+        end=false;
+        conError=false;
         drawCanvas();
-        draw();
     } else if(end==true){
         connectToServer();
         close=false;
         end=false;
+        conError=false;
         drawCanvas();
-        draw();
-    }
+    } else if(conError==true){
+        connectToServer();
+        close=false;
+        end=false;
+        conError=false;
+        drawCanvas();       
+    } else if(!connection){
+        connectToServer();
+        close=false;
+        end=false;
+        conError=false;
+        drawCanvas();       
+}
 });
-
-animation();
 
 }
 
