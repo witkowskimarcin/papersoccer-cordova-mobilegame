@@ -9,6 +9,11 @@ https://en.wikipedia.org/wiki/Paper_soccer
 
 Mobile multiplayer game.
 
+### Built With
+
+* Cordova (client)
+* NodeJS, WebSocket (server)
+
 ## Screenshots
 ![Image](1.png)
 
