@@ -1,16 +1,16 @@
-// let IP = "192.168.43.3";
-let IP = "pappersoccer.herokuapp.com";
-// let PORT = "3000";
+let IP = "192.168.43.3";
+// let IP = "pappersoccer.herokuapp.com";
+let PORT = "3000";
 // let IP = "localhost";
 //let IP = "10.16.4.183";
-// let ADDRESS = "ws://"+IP+":"+PORT+"/";
-let ADDRESS = "wss://"+IP;
+let ADDRESS = "ws://"+IP+":"+PORT+"/";
+// let ADDRESS = "wss://"+IP;
 
 // COLORS
 let FIELD_COLOR = "rgba(10, 220, 10, 1.0)";
 let MYGATE_COLOR = "#0000FF";
 let ENEMYGATE_COLOR = "#FF0000";
-let EDGE_COLOR = "#FFFFFF";
+let EDGE_COLOR = "white";
 let BALL_COLOR = "#FFFFFF";
 let BG_COLOR = "#374140";
 let TEXT_COLOR = "#FFFFFF";
@@ -260,10 +260,10 @@ function drawEdges(ctx){
     ctx.fill();
 
     for(i=0;i<edges.length;i++){
-        ctx.fillStyle=EDGE_COLOR; 
         ctx.beginPath();
         ctx.moveTo(multiply*edges[i].begin.x,multiply*edges[i].begin.y);
         ctx.lineTo(multiply*edges[i].end.x,multiply*edges[i].end.y);
+        ctx.strokeStyle=EDGE_COLOR;
         ctx.stroke();
     }
 }
@@ -373,20 +373,23 @@ function drawField(ctx){
 
 }
 
-function drawMessage(ctx, mess){
-    ctx.fillStyle = MESSAGE_COLOR;
-    ctx.beginPath();
-    ctx.rect(0,0,canvas.width,canvas.height);
-    ctx.fill();
+function drawMessage(ctx, mess, shift=0, without_rect=false){
+
+    if(!without_rect){
+        ctx.fillStyle = MESSAGE_COLOR;
+        ctx.beginPath();
+        ctx.rect(0,0,canvas.width,canvas.height);
+        ctx.fill();
+    }
 
     ctx.fillStyle = "black";
     ctx.font = "30px Times Roman";
-    ctx.fillText(mess, 0, canvas.height/2.0);
+    ctx.fillText(mess, 0, (canvas.height+shift)/2.0);
 
     ctx.strokeStyle = "white";
     ctx.font = "30px Times Roman";
     ctx.lineWidth = 3;
-    ctx.strokeText(mess, 0, canvas.height/2.0);
+    ctx.strokeText(mess, 0, (canvas.height+shift)/2.0);
 }
 
 function draw(){
@@ -397,20 +400,25 @@ function draw(){
 
     if(end==true){
         if(won==true){
-            drawMessage(ctx, "You won, tap to play next game");
+            drawMessage(ctx, "You won,");
+            drawMessage(ctx, "tap to play next game",100,true);
         } else {
-            drawMessage(ctx, "You lost, tap to play next game");
+            drawMessage(ctx, "You lost,");
+            drawMessage(ctx, "tap to play next game",100,true);
         }
     } else if(close==true){
-        drawMessage(ctx, "Second player disconnected, tap to find another");
+        drawMessage(ctx, "Second player disconnected,");
+        drawMessage(ctx, "tap to find another",100,true);
     } else if(ready==false){
         drawMessage(ctx, "Wait for second player");
     } else if(conError==true || !connection){
-        drawMessage(ctx, "Connection error, tap to reconnect");
+        drawMessage(ctx, "Connection error,");
+        drawMessage(ctx, "tap to reconnect",100,true);
     } else {
 
         ctx.translate((canvas.width/2)+150, (canvas.height/2)-270);
         ctx.rotate((90.0*Math.PI)/180.0);
+        // ctx.fillStyle=EDGE_COLOR;
         drawEdges(ctx);
         ball.render(ctx);
         ctx.rotate((-90.0*Math.PI)/180.0);
@@ -900,13 +908,14 @@ canvas.addEventListener("click", function(evt){
         end=false;
         conError=false;
         drawCanvas();       
-    } else if(!connection){
+    } 
+    else if(typeof connection === 'undefined'){
         connectToServer();
         close=false;
         end=false;
         conError=false;
         drawCanvas();       
-}
+    }
 });
 
 }
